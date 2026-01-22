@@ -1,0 +1,25 @@
+#time-tracker-widget {
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  padding: 10px;
+  background-color: #f4f4f4;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+#start-stop-timer {
+  padding: 5px 10px;
+  background-color: #0078d4;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+#start-stop-timer:hover {
+  background-color: #005a9e;
+}
+
+#timer-display {
+  margin-top: 10px;
+}

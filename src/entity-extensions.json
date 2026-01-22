@@ -1,0 +1,13 @@
+{
+  "entityTypeExtensions": [
+    {
+      "entityType": "Issue",
+
+      "properties": {
+        "timeTracking": {
+          "type": "string",
+          "description": "Stringified JSON: { totalSeconds: number, entries: {seconds:number, at:number}[] }"        }
+      }
+    }
+  ]
+}

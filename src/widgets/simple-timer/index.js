@@ -1,0 +1,164 @@
+async function getHost() {
+    if (!window.__ytHostPromise) {
+        console.log('[simple-timer] creating YTApp host promise');
+        window.__ytHostPromise = YTApp.register();
+    }
+    return window.__ytHostPromise;
+}
+
+// --- Backend bridge helpers ---
+async function callApp(path, init) {
+  const host = await getHost();
+  const res = await host.fetchApp(path, Object.assign({ scope: true }, init));
+  return res;
+}
+
+async function backendGetIssueId() {
+  const host = await getHost();
+  const res = await host.fetchApp('backend/getIssueId', { method: 'GET', scope: true });
+  return (await res.text()).trim();
+}
+
+async function backendStartTime()     { return callApp('backend/start-time',     { method: 'POST' }); }
+async function backendStopTime()      { return callApp('backend/stop-time',      { method: 'POST' }); }
+async function backendGetTime()       { return callApp('backend/get-time',       { method: 'GET'  }); }
+async function backendResetTracker()  { return callApp('backend/reset-tracker',  { method: 'POST' }); }
+
+// --- REST helpers (frontend) ---
+function buildWorkItemBody(minutes) {
+  const mins = Math.max(0, Math.floor(minutes));
+  return { duration: { minutes: mins } };
+}
+
+async function ytPostWorkItemMinutes(issueId, minutes) {
+  const host = await getHost();
+  const id = String(issueId).trim();
+  const path = `issues/${id}/timeTracking/workItems`;
+  const res = await host.fetchYouTrack(path, { method: 'POST', body: buildWorkItemBody(minutes) });
+  return res;
+}
+
+async function ytGetWorkItemsTotalMinutes(issueId) {
+  const host = await getHost();
+  const id = String(issueId).trim();
+  const path = `issues/${id}/timeTracking/workItems`;
+  const items = await host.fetchYouTrack(path, { query: { fields: 'duration(minutes)' } });
+  let total = 0;
+  if (Array.isArray(items)) {
+    for (const it of items) {
+      const m = it && it.duration && typeof it.duration.minutes === 'number' ? Math.floor(it.duration.minutes) : 0;
+      total += m;
+    }
+  }
+  return total;
+}
+
+// --- UI wiring and ticking ---
+let tickingInterval = null;
+let runningSince = null;
+let totalSeconds = 0;
+let issueId = null; // loaded from backend/getIssueId
+
+function formatTime(sec) {
+  const s = Math.max(0, Math.floor(sec));
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  return `${m}m ${r}s`;
+}
+
+function computeShownSeconds() {
+  if (runningSince) {
+    const elapsed = Math.floor((Date.now() - runningSince) / 1000);
+    return Math.max(0, totalSeconds + elapsed);
+  }
+  return Math.max(0, totalSeconds);
+}
+
+function render() {
+  const btn = document.getElementById('start-stop-timer');
+  const saveBtn = document.getElementById('save-time');
+  const display = document.getElementById('timer-display');
+  const isRunning = Boolean(runningSince);
+  btn.textContent = isRunning ? 'Stop Timer' : 'Start Timer';
+  saveBtn.style.display = isRunning ? 'none' : 'inline-block';
+  display.textContent = `Time Tracked: ${formatTime(computeShownSeconds())}`;
+}
+
+function startTicking() { if (!tickingInterval) { console.log('[simple-timer] start ticking'); tickingInterval = setInterval(render, 1000); } }
+function stopTicking()  { if (tickingInterval)  { console.log('[simple-timer] stop ticking');  clearInterval(tickingInterval); tickingInterval = null; } }
+
+async function init() {
+  try {
+    issueId = await backendGetIssueId();
+    if (!issueId) console.error('[simple-timer] Issue ID is empty');
+  } catch (e) {
+  }
+
+  try {
+    const state = await backendGetTime();
+    totalSeconds = Math.max(0, Math.floor(state.trackedSeconds || 0));
+    runningSince = state.runningSince || null;
+  } catch (e) {
+    console.error('[simple-timer] backendGetTime failed', e);
+    totalSeconds = 0;
+    runningSince = null;
+  }
+
+  const btn = document.getElementById('start-stop-timer');
+  const saveBtn = document.getElementById('save-time');
+
+  btn.addEventListener('click', async () => {
+    try {
+      if (!runningSince) {
+        const res = await backendStartTime();
+        runningSince = res.runningSince || Date.now();
+        startTicking();
+      } else {
+        const res = await backendStopTime();
+        totalSeconds = Math.max(0, Math.floor(res.totalSeconds || 0));
+        runningSince = null;
+        stopTicking();
+      }
+      render();
+    } catch (e) {
+      console.error('[simple-timer] Toggle timer failed', e);
+    }
+  });
+
+  saveBtn.addEventListener('click', async () => {
+    try {
+      if (runningSince) {
+        const res = await backendStopTime();
+        totalSeconds = Math.max(0, Math.floor(res.totalSeconds || 0));
+        runningSince = null;
+        stopTicking();
+      }
+      render();
+
+      const minutes = Math.max(0, Math.floor(totalSeconds / 60));
+      if (minutes <= 0) { alert('Nothing to save yet (less than 1 minute tracked).'); return; }
+      if (!issueId) { alert('Cannot save: issue ID is unknown.'); return; }
+
+      await ytPostWorkItemMinutes(issueId, minutes);
+
+      await backendResetTracker();
+      totalSeconds = 0;
+      runningSince = null;
+
+      render();
+      alert(`Saved ${minutes} minute(s) to work items.`);
+    } catch (e) {
+      console.error('[simple-timer] Save time failed', e);
+      alert('Failed to save time. See console for details.');
+    }
+  });
+
+  if (runningSince) startTicking();
+  render();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
