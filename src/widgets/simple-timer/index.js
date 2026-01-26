@@ -1,9 +1,12 @@
+/* eslint-disable no-console */
+/* eslint-disable no-magic-numbers */
 
+// eslint-disable-next-line no-undef
 const host = await YTApp.register();
 
 // --- Backend bridge helpers ---
-async function callApp(path, init) {
-  const res = await host.fetchApp(path, Object.assign({ scope: true }, init));
+async function callApp(path, params) {
+  const res = await host.fetchApp(path, Object.assign({ scope: true }, params));
   return res;
 }
 
@@ -28,20 +31,6 @@ async function ytPostWorkItemMinutes(issueId, minutes) {
   const path = `issues/${id}/timeTracking/workItems`;
   const res = await host.fetchYouTrack(path, { method: 'POST', body: buildWorkItemBody(minutes) });
   return res;
-}
-
-async function ytGetWorkItemsTotalMinutes(issueId) {
-  const id = String(issueId).trim();
-  const path = `issues/${id}/timeTracking/workItems`;
-  const items = await host.fetchYouTrack(path, { query: { fields: 'duration(minutes)' } });
-  let total = 0;
-  if (Array.isArray(items)) {
-    for (const it of items) {
-      const m = it && it.duration && typeof it.duration.minutes === 'number' ? Math.floor(it.duration.minutes) : 0;
-      total += m;
-    }
-  }
-  return total;
 }
 
 // --- UI wiring and ticking ---
@@ -81,8 +70,9 @@ function stopTicking()  { if (tickingInterval)  { console.log('[simple-timer] st
 async function init() {
   try {
     issueId = await backendGetIssueId();
-    if (!issueId) console.error('[simple-timer] Issue ID is empty');
+    if (!issueId) {console.error('[simple-timer] Issue ID is empty');}
   } catch (e) {
+    console.error('[simple-timer] backendGetIssueId failed', e);
   }
 
   try {
@@ -144,7 +134,7 @@ async function init() {
     }
   });
 
-  if (runningSince) startTicking();
+  if (runningSince) {startTicking();}
   render();
 }
 
