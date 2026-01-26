@@ -12,7 +12,7 @@ async function callApp(path, params) {
 
 async function backendGetIssueId() {
   const res = await host.fetchApp('backend/getIssueId', { method: 'GET', scope: true });
-  return (await res.text()).trim();
+  return res.issueId;
 }
 
 async function backendStartTime()     { return callApp('backend/start-time',     { method: 'POST' }); }

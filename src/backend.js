@@ -14,7 +14,7 @@ exports.httpHandler = {
       path: 'getIssueId',
       handle: function handle(ctx) {
         const issueId = ctx.issue.id;
-        ctx.response.text(issueId);
+        ctx.response.json({issueId});
       }
     },
     {
