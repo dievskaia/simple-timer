@@ -127,8 +127,8 @@ async function init() {
       render();
 
       const minutes = Math.max(0, Math.floor(totalSeconds / 60));
-      if (minutes <= 0) { alert('Nothing to save yet (less than 1 minute tracked).'); return; }
-      if (!issueId) { alert('Cannot save: issue ID is unknown.'); return; }
+      if (minutes <= 0) { host.alert('Nothing to save yet (less than 1 minute tracked).'); return; }
+      if (!issueId) { host.alert('Cannot save: issue ID is unknown.'); return; }
 
       await ytPostWorkItemMinutes(issueId, minutes);
 
@@ -137,10 +137,10 @@ async function init() {
       runningSince = null;
 
       render();
-      alert(`Saved ${minutes} minute(s) to work items.`);
+      host.alert(`Saved ${minutes} minute(s) to work items.`);
     } catch (e) {
       console.error('[simple-timer] Save time failed', e);
-      alert('Failed to save time. See console for details.');
+      host.alert('Failed to save time. See console for details.');
     }
   });
 
