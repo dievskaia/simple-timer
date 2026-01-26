@@ -1,22 +1,18 @@
-async function getHost() {
-    if (!window.__ytHostPromise) {
-        console.log('[simple-timer] creating YTApp host promise');
-        window.__ytHostPromise = YTApp.register();
-    }
-    return window.__ytHostPromise;
-}
+/* eslint-disable no-console */
+/* eslint-disable no-magic-numbers */
+
+// eslint-disable-next-line no-undef
+const host = await YTApp.register();
 
 // --- Backend bridge helpers ---
-async function callApp(path, init) {
-  const host = await getHost();
-  const res = await host.fetchApp(path, Object.assign({ scope: true }, init));
+async function callApp(path, params) {
+  const res = await host.fetchApp(path, Object.assign({ scope: true }, params));
   return res;
 }
 
 async function backendGetIssueId() {
-  const host = await getHost();
   const res = await host.fetchApp('backend/getIssueId', { method: 'GET', scope: true });
-  return (await res.text()).trim();
+  return res.issueId;
 }
 
 async function backendStartTime()     { return callApp('backend/start-time',     { method: 'POST' }); }
@@ -31,26 +27,10 @@ function buildWorkItemBody(minutes) {
 }
 
 async function ytPostWorkItemMinutes(issueId, minutes) {
-  const host = await getHost();
   const id = String(issueId).trim();
   const path = `issues/${id}/timeTracking/workItems`;
   const res = await host.fetchYouTrack(path, { method: 'POST', body: buildWorkItemBody(minutes) });
   return res;
-}
-
-async function ytGetWorkItemsTotalMinutes(issueId) {
-  const host = await getHost();
-  const id = String(issueId).trim();
-  const path = `issues/${id}/timeTracking/workItems`;
-  const items = await host.fetchYouTrack(path, { query: { fields: 'duration(minutes)' } });
-  let total = 0;
-  if (Array.isArray(items)) {
-    for (const it of items) {
-      const m = it && it.duration && typeof it.duration.minutes === 'number' ? Math.floor(it.duration.minutes) : 0;
-      total += m;
-    }
-  }
-  return total;
 }
 
 // --- UI wiring and ticking ---
@@ -90,8 +70,9 @@ function stopTicking()  { if (tickingInterval)  { console.log('[simple-timer] st
 async function init() {
   try {
     issueId = await backendGetIssueId();
-    if (!issueId) console.error('[simple-timer] Issue ID is empty');
+    if (!issueId) {console.error('[simple-timer] Issue ID is empty');}
   } catch (e) {
+    console.error('[simple-timer] backendGetIssueId failed', e);
   }
 
   try {
@@ -136,8 +117,8 @@ async function init() {
       render();
 
       const minutes = Math.max(0, Math.floor(totalSeconds / 60));
-      if (minutes <= 0) { alert('Nothing to save yet (less than 1 minute tracked).'); return; }
-      if (!issueId) { alert('Cannot save: issue ID is unknown.'); return; }
+      if (minutes <= 0) { host.alert('Nothing to save yet (less than 1 minute tracked).'); return; }
+      if (!issueId) { host.alert('Cannot save: issue ID is unknown.'); return; }
 
       await ytPostWorkItemMinutes(issueId, minutes);
 
@@ -146,14 +127,14 @@ async function init() {
       runningSince = null;
 
       render();
-      alert(`Saved ${minutes} minute(s) to work items.`);
+      host.alert(`Saved ${minutes} minute(s) to work items.`);
     } catch (e) {
       console.error('[simple-timer] Save time failed', e);
-      alert('Failed to save time. See console for details.');
+      host.alert('Failed to save time. See console for details.');
     }
   });
 
-  if (runningSince) startTicking();
+  if (runningSince) {startTicking();}
   render();
 }
 

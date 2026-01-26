@@ -1,3 +1,4 @@
+/* eslint-disable no-magic-numbers */
 function loadData(ctx) {
   try { return JSON.parse(ctx.issue.extensionProperties.timeTracking || "{}") || {}; } catch { return {}; }
 }
@@ -11,16 +12,16 @@ exports.httpHandler = {
       scope: 'issue',
       method: 'GET',
       path: 'getIssueId',
-      handle: function (ctx) {
+      handle: function handle(ctx) {
         const issueId = ctx.issue.id;
-        ctx.response.text(issueId);
+        ctx.response.json({issueId});
       }
     },
     {
       scope: 'issue',
       method: 'GET',
       path: 'get-time',
-      handle: function (ctx) {
+      handle: function handle(ctx) {
         const d = loadData(ctx);
         const totalSeconds = Math.max(0, Math.floor(d.totalSeconds || 0));
         return ctx.response.json({ success: true, trackedSeconds: totalSeconds, trackedMinutes: floorMinutesFromSeconds(totalSeconds), runningSince: d.runningSince || null });
@@ -30,7 +31,7 @@ exports.httpHandler = {
       scope: 'issue',
       method: 'POST',
       path: 'start-time',
-      handle: function (ctx) {
+      handle: function handle(ctx) {
         const d = loadData(ctx);
         if (!d.runningSince) {
           d.runningSince = nowMs();
@@ -44,7 +45,7 @@ exports.httpHandler = {
       scope: 'issue',
       method: 'POST',
       path: 'stop-time',
-      handle: function (ctx) {
+      handle: function handle(ctx) {
         const d = loadData(ctx);
         if (d.runningSince) {
           const elapsed = Math.max(0, Math.floor((nowMs() - d.runningSince) / 1000));
@@ -60,7 +61,7 @@ exports.httpHandler = {
       scope: 'issue',
       method: 'POST',
       path: 'reset-tracker',
-      handle: function (ctx) {
+      handle: function handle(ctx) {
         saveData(ctx, { totalSeconds: 0, entries: [], runningSince: null });
         return ctx.response.json({ success: true });
       }}
