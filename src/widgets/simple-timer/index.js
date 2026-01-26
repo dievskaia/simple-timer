@@ -1,20 +1,13 @@
-async function getHost() {
-    if (!window.__ytHostPromise) {
-        console.log('[simple-timer] creating YTApp host promise');
-        window.__ytHostPromise = YTApp.register();
-    }
-    return window.__ytHostPromise;
-}
+
+const host = await YTApp.register();
 
 // --- Backend bridge helpers ---
 async function callApp(path, init) {
-  const host = await getHost();
   const res = await host.fetchApp(path, Object.assign({ scope: true }, init));
   return res;
 }
 
 async function backendGetIssueId() {
-  const host = await getHost();
   const res = await host.fetchApp('backend/getIssueId', { method: 'GET', scope: true });
   return (await res.text()).trim();
 }
@@ -31,7 +24,6 @@ function buildWorkItemBody(minutes) {
 }
 
 async function ytPostWorkItemMinutes(issueId, minutes) {
-  const host = await getHost();
   const id = String(issueId).trim();
   const path = `issues/${id}/timeTracking/workItems`;
   const res = await host.fetchYouTrack(path, { method: 'POST', body: buildWorkItemBody(minutes) });
@@ -39,7 +31,6 @@ async function ytPostWorkItemMinutes(issueId, minutes) {
 }
 
 async function ytGetWorkItemsTotalMinutes(issueId) {
-  const host = await getHost();
   const id = String(issueId).trim();
   const path = `issues/${id}/timeTracking/workItems`;
   const items = await host.fetchYouTrack(path, { query: { fields: 'duration(minutes)' } });
