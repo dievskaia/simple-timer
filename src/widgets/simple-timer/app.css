@@ -1,25 +1,50 @@
-#time-tracker-widget {
-  font-family: Arial, sans-serif;
-  font-size: 14px;
-  padding: 10px;
-  background-color: #f4f4f4;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+/* General buttons */
+button {
+  font-family: var(--ring-font-family, Arial, sans-serif); /* Fallback font */
+  font-size: var(--ring-font-size, 14px);
+  border-radius: var(--ring-border-radius, 4px); /* Rounded corners */
+  padding: var(--ring-button-padding-block, 8px 16px);
+  cursor: pointer;
+  transition: background-color 0.3s ease; /* Smooth hover effects */
+  border: none; /* Removes browser default borders */
 }
 
+/* Blue "Start timer" button */
 #start-stop-timer {
-  padding: 5px 10px;
-  background-color: #0078d4;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
+  background-color: var(--ring-button-primary-background-color, rgb(53, 116, 240)); /* Primary blue color */
+  color: var(--ring-white-text-color, #ffffff); /* White text for contrast */
 }
 
 #start-stop-timer:hover {
-  background-color: #005a9e;
+  background-color: var(--ring-main-hover-color, rgb(51, 105, 214)); /* Darker blue on hover */
 }
 
+/* Make "Save time" button (light gray) use neutral styling */
+#save-time {
+  background-color: var(--ring-content-background-color, #f5f5f5); /* Light gray */
+  color: var(--ring-text-color, #333); /* Neutral text color */
+  border: 1px solid var(--ring-line-color, #ccc); /* Light border */
+}
+
+#save-time:hover {
+  background-color: var(--ring-hover-background-color, #e7e7e7); /* Slightly darker gray on hover */
+}
+
+/* Timer widget container */
+#time-tracker-widget {
+  font-family: var(--ring-font-family, Arial, sans-serif); /* Fallback font */
+  font-size: var(--ring-font-size, 14px);
+  padding: var(--ring-button-padding-block, 16px); /* Padding for the widget */
+  background-color: var(--ring-content-background-color, #ffffff); /* Background color */
+  border: 1px solid var(--ring-line-color, #ccc); /* Light border */
+  border-radius: var(--ring-border-radius, 8px); /* Widget corners */
+  line-height: var(--ring-line-height, 1.5);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Add a slight shadow */
+}
+
+/* Timer display styling */
 #timer-display {
-  margin-top: 10px;
+  margin-top: 15px; /* Add spacing above the timer display */
+  color: var(--ring-text-color, #333); /* Match text color */
+  font-weight: bold; /* Make it stand out a bit */
 }

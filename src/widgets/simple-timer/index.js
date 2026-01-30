@@ -59,9 +59,9 @@ function render() {
   const saveBtn = document.getElementById('save-time');
   const display = document.getElementById('timer-display');
   const isRunning = Boolean(runningSince);
-  btn.textContent = isRunning ? 'Stop Timer' : 'Start Timer';
+  btn.textContent = isRunning ? 'Stop timer' : 'Start timer';
   saveBtn.style.display = isRunning ? 'none' : 'inline-block';
-  display.textContent = `Time Tracked: ${formatTime(computeShownSeconds())}`;
+  display.textContent = `Time tracked: ${formatTime(computeShownSeconds())}`;
 }
 
 function startTicking() { if (!tickingInterval) { console.log('[simple-timer] start ticking'); tickingInterval = setInterval(render, 1000); } }
